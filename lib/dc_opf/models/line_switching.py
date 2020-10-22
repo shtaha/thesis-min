@@ -7,13 +7,13 @@ from ..parameters import LineSwitchingParameters
 
 class LineSwitchingDCOPF(StandardDCOPF):
     def __init__(
-            self,
-            name,
-            grid,
-            grid_backend,
-            params=LineSwitchingParameters(),
-            verbose=False,
-            **kwargs,
+        self,
+        name,
+        grid,
+        grid_backend,
+        params=LineSwitchingParameters(),
+        verbose=False,
+        **kwargs,
     ):
         super().__init__(
             name=name,
@@ -95,17 +95,17 @@ class LineSwitchingDCOPF(StandardDCOPF):
             # -M_l(1 - x_l) <= F_ij - b_ij * (delta_i - delta_j) <= M_l * (1 - x_l)
             def _constraint_line_flow_upper(model, line_id):
                 return model.line_flow[line_id] - model.line_b[line_id] * (
-                        model.delta[model.line_ids_to_bus_ids[line_id][0]]
-                        - model.delta[model.line_ids_to_bus_ids[line_id][1]]
+                    model.delta[model.line_ids_to_bus_ids[line_id][0]]
+                    - model.delta[model.line_ids_to_bus_ids[line_id][1]]
                 ) <= model.big_m[line_id] * (1 - model.x[line_id])
 
             def _constraint_line_flow_lower(model, line_id):
                 return -model.big_m[line_id] * (
-                        1 - model.x[line_id]
+                    1 - model.x[line_id]
                 ) <= model.line_flow[line_id] - model.line_b[line_id] * (
-                               model.delta[model.line_ids_to_bus_ids[line_id][0]]
-                               - model.delta[model.line_ids_to_bus_ids[line_id][1]]
-                       )
+                    model.delta[model.line_ids_to_bus_ids[line_id][0]]
+                    - model.delta[model.line_ids_to_bus_ids[line_id][1]]
+                )
 
             self.model.constraint_line_flow_upper = pyo.Constraint(
                 self.model.line_set, rule=_constraint_line_flow_upper
@@ -118,13 +118,13 @@ class LineSwitchingDCOPF(StandardDCOPF):
 
             def _constraint_line_flow(model, line_id):
                 return (
-                        model.line_flow[line_id]
-                        == model.line_b[line_id]
-                        * (
-                                model.delta[model.line_ids_to_bus_ids[line_id][0]]
-                                - model.delta[model.line_ids_to_bus_ids[line_id][1]]
-                        )
-                        * model.x[line_id]
+                    model.line_flow[line_id]
+                    == model.line_b[line_id]
+                    * (
+                        model.delta[model.line_ids_to_bus_ids[line_id][0]]
+                        - model.delta[model.line_ids_to_bus_ids[line_id][1]]
+                    )
+                    * model.x[line_id]
                 )
 
             self.model.constraint_line_flow = pyo.Constraint(
@@ -137,14 +137,14 @@ class LineSwitchingDCOPF(StandardDCOPF):
 
         def _constraint_max_flow_lower(model, line_id):
             return (
-                    -model.line_flow_max[line_id] * model.x[line_id]
-                    <= model.line_flow[line_id]
+                -model.line_flow_max[line_id] * model.x[line_id]
+                <= model.line_flow[line_id]
             )
 
         def _constraint_max_flow_upper(model, line_id):
             return (
-                    model.line_flow[line_id]
-                    <= model.line_flow_max[line_id] * model.x[line_id]
+                model.line_flow[line_id]
+                <= model.line_flow_max[line_id] * model.x[line_id]
             )
 
         self.model.constraint_line_max_flow_lower = pyo.Constraint(
@@ -197,8 +197,8 @@ class LineSwitchingDCOPF(StandardDCOPF):
                 obj = obj + _objective_line_margin(model)
 
             if (
-                    not (self.params.line_margin and self.params.solver_name != "glpk")
-                    or self.params.gen_cost
+                not (self.params.line_margin and self.params.solver_name != "glpk")
+                or self.params.gen_cost
             ):
                 obj = obj + _objective_gen_p(model)
 

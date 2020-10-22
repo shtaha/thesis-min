@@ -11,12 +11,12 @@ from ..visualizer import pprint
 
 
 def make_agent(
-        agent_name,
-        case,
-        save_dir=None,
-        verbose=False,
-        horizon=2,
-        **kwargs,
+    agent_name,
+    case,
+    save_dir=None,
+    verbose=False,
+    horizon=2,
+    **kwargs,
 ):
     action_set = case.generate_unitary_action_set(
         case, case_save_dir=save_dir, verbose=verbose
@@ -102,11 +102,11 @@ class AgentMIP(BaseAgent):
     """
 
     def __init__(
-            self,
-            case,
-            action_set,
-            reward_class=RewardL2RPN2019,
-            **kwargs,
+        self,
+        case,
+        action_set,
+        reward_class=RewardL2RPN2019,
+        **kwargs,
     ):
         BaseAgent.__init__(self, name="Agent MIP", case=case)
 
@@ -201,11 +201,11 @@ class AgentMultistepMIP(BaseAgent):
     """
 
     def __init__(
-            self,
-            case,
-            action_set,
-            reward_class=RewardL2RPN2019,
-            **kwargs,
+        self,
+        case,
+        action_set,
+        reward_class=RewardL2RPN2019,
+        **kwargs,
     ):
         BaseAgent.__init__(self, name="Agent Multistep MIP", case=case)
 
