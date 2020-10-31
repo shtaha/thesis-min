@@ -1669,7 +1669,7 @@ class MultistepTopologyDCOPF(StandardDCOPF):
 
     def _build_constraint_do_nothing_action(self):
         def _constraint_do_nothing_action(model):
-            t = model.time_set[0]
+            t = model.time_set[1]
 
             line_switch = sum(
                 [model.x_line_status_switch[t, line_id] for line_id in model.line_set]
@@ -1816,29 +1816,154 @@ class MultistepTopologyDCOPF(StandardDCOPF):
                 total_penalty = total_penalty + penalty
             return self.params.obj_lambda_action / self.params.horizon * total_penalty
 
-        def _objective(model):
-            obj = 0.0
-            if self.params.obj_gen_cost:
-                obj = obj + _objective_gen_p(model)
+        def _build_objective(self):
+            assert (
+                    self.params.obj_gen_cost
+                    or self.params.obj_reward_lin
+                    or self.params.obj_reward_quad
+                    or self.params.obj_reward_max
+                    or self.params.obj_lin_gen_penalty
+                    or self.params.obj_quad_gen_penalty
+            )
 
-            if self.params.obj_reward_lin:
-                obj = obj + _objective_lin_line_margins(model)
-            elif self.params.obj_reward_quad:
-                obj = obj + _objective_quad_line_margins(model)
-            elif self.params.obj_reward_max:
-                obj = obj + _objective_max_line_margins(model)
+            assert (
+                    not (self.params.obj_reward_lin and self.params.obj_reward_quad)
+                    and not (self.params.obj_reward_lin and self.params.obj_reward_max)
+                    and not (self.params.obj_reward_max and self.params.obj_reward_quad)
+            )  # Only one penalty on margins
+            assert not (
+                    self.params.obj_lin_gen_penalty and self.params.obj_quad_gen_penalty
+            )  # Only one penalty on generators
 
-            if self.params.obj_lin_gen_penalty:
-                obj = obj + _objective_lin_gen_penalty(model)
-            elif self.params.obj_quad_gen_penalty:
-                obj = obj + _objective_quad_gen_penalty(model)
+            """
+                Generator power production cost. As in standard OPF.
+            """
 
-            if self.params.obj_lambda_action > 0.0:
-                obj = obj + _objective_action_penalty(model)
+            def _objective_gen_p(model):
+                total_cost = 0
+                for t in model.time_set:
+                    cost = sum(
+                        [
+                            model.gen_p[t, gen_id] * self.gen.cost_pu[gen_id]
+                            for gen_id in model.gen_set
+                        ]
+                    )
+                    total_cost = total_cost + cost
+                return total_cost
 
-            return obj
+            """
+                Line margins.
+            """
 
-        self.model.objective = pyo.Objective(rule=_objective, sense=pyo.minimize)
+            # Linear
+            def _objective_lin_line_margins(model):
+                penalty = 0.0
+                for t in model.time_set:
+                    for line_id in model.line_set:
+                        penalty = penalty + (
+                                model.mu[t, line_id] + model.f_line[t, line_id]
+                        )
+
+                return penalty / len(model.line_set) / len(model.time_set)
+
+            # Quadratic
+            def _objective_quad_line_margins(model):
+                total_cost = 0.0
+                for t in model.time_set:
+                    for line_id in model.line_set:
+                        total_cost = total_cost + model.f_line[t, line_id]
+                        total_cost = total_cost + (
+                                model.line_flow[t, line_id] ** 2
+                                / model.line_flow_max[line_id] ** 2
+                        )
+
+                return total_cost / len(model.time_set) / len(model.line_set)
+
+            def _objective_max_line_margins(model):
+                return sum([model.mu_max[t] for t in model.time_set]) / len(model.time_set)
+
+            """
+                Generator power production error.
+            """
+
+            # Linear penalty on generator power productions
+            def _objective_lin_gen_penalty(model):
+                return (
+                        self.params.obj_lambda_gen
+                        / len(model.time_set)
+                        * sum([model.mu_gen[t] for t in model.time_set])
+                )
+
+            # Quadratic penalty on generator power productions
+            def _objective_quad_gen_penalty(model):
+                total_penalty = 0
+                for t in model.time_set:
+                    penalty = sum(
+                        [
+                            (
+                                    (model.gen_p[t, gen_id] - model.gen_p_ref[t, gen_id])
+                                    / (model.gen_p_max[gen_id])
+                            )
+                            ** 2
+                            for gen_id in model.gen_set
+                        ]
+                    )
+                    total_penalty = total_penalty + penalty
+                return (
+                        self.params.obj_lambda_gen
+                        / len(model.gen_set)
+                        / len(model.time_set)
+                        * total_penalty
+                )
+
+            """
+                Penalize actions. Prefer do-nothing actions.
+            """
+
+            def _objective_action_penalty(model):
+                total_penalty = 0
+                for t in model.time_set:
+                    penalty = 0
+                    if model.x_line_status_switch:
+                        penalty = penalty + sum(
+                            [
+                                model.x_line_status_switch[t, line_id]
+                                for line_id in model.line_set
+                            ]
+                        )
+                    if model.x_substation_topology_switch:
+                        penalty = penalty + sum(
+                            [
+                                model.x_substation_topology_switch[t, sub_id]
+                                for sub_id in model.sub_set
+                            ]
+                        )
+                    total_penalty = total_penalty + penalty
+                return self.params.obj_lambda_action / self.params.horizon * total_penalty
+
+            def _objective(model):
+                obj = 0.0
+                if self.params.obj_gen_cost:
+                    obj = obj + _objective_gen_p(model)
+
+                if self.params.obj_reward_lin:
+                    obj = obj + _objective_lin_line_margins(model)
+                elif self.params.obj_reward_quad:
+                    obj = obj + _objective_quad_line_margins(model)
+                elif self.params.obj_reward_max:
+                    obj = obj + _objective_max_line_margins(model)
+
+                if self.params.obj_lin_gen_penalty:
+                    obj = obj + _objective_lin_gen_penalty(model)
+                elif self.params.obj_quad_gen_penalty:
+                    obj = obj + _objective_quad_gen_penalty(model)
+
+                if self.params.obj_lambda_action > 0.0:
+                    obj = obj + _objective_action_penalty(model)
+
+                return obj
+
+            self.model.objective = pyo.Objective(rule=_objective, sense=pyo.minimize)
 
     def solve(self, verbose=False):
         self._solve(
