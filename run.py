@@ -15,9 +15,10 @@ verbose = False
 kwargs = {}
 
 for case_name in [
-    "rte_case5_example",
+
+    #"rte_case14_realistic",
+    #"rte_case5_example"
     "l2rpn_2019",
-    "l2rpn_wcci_2020",
 ]:
 
     """
@@ -28,8 +29,8 @@ for case_name in [
     env = case.env
 
     for agent_name in [
-        "do-nothing-agent",
-        "agent-mip",
+        #"do-nothing-agent",
+        #"agent-mip",
         "agent-multistep-mip",
     ]:
         np.random.seed(0)

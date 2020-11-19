@@ -20,8 +20,7 @@ def load_case(case_name, env_parameters=None, verbose=False):
     elif "l2rpn_wcci_2020" in case_name:
         case = OPFL2RPN2020(case_name=case_name, env_parameters=env_parameters)
     else:
-        raise ValueError(f"Invalid case name. Case {case_name} does not exist.")
-
+        case = OPFL2RPN2020ELSE(case_name=case_name, env_parameters=env_parameters)
     if verbose and case.env:
         describe_environment(case.env)
     elif case.env:
@@ -173,6 +172,8 @@ class OPFL2RPN2020(OPFAbstractCase, UnitConverter, OPFCaseMixin):
         self.grid_backend = self.update_backend(self.env)
         self.env.backend._grid = self.grid_backend
 
+
+
     def build_case_grid(self):
         return self.env.backend._grid.deepcopy()
 
@@ -214,5 +215,42 @@ class OPFL2RPN2020(OPFAbstractCase, UnitConverter, OPFCaseMixin):
         trafo_params.set_index("id", inplace=True)
         grid.trafo["b_pu"] = trafo_params["b_pu"]
         grid.trafo["max_p_pu"] = trafo_params["max_p_pu"]
+
+        return grid
+
+
+class OPFL2RPN2020ELSE(OPFAbstractCase, UnitConverter, OPFCaseMixin):
+    def __init__(self, case_name, env_parameters=None):
+        UnitConverter.__init__(self, base_unit_p=1e6, base_unit_v=138000.0)
+
+        self.name = case_name
+
+        self.env = self.make_environment(case_name=case_name, parameters=env_parameters)
+
+        self.grid_org = self.build_case_grid()
+        self.grid_backend = self.update_backend(self.env)
+        self.env.backend._grid = self.grid_backend
+
+
+
+    def build_case_grid(self):
+        return self.env.backend._grid.deepcopy()
+
+
+    def update_backend(self, env):
+        """
+        Update backend grid with missing data.
+        """
+        grid = env.backend._grid.deepcopy()
+
+        # Bus names
+        n_sub = len(grid.bus.index) // 2
+        bus_to_sub_ids = np.concatenate((np.arange(0, n_sub), np.arange(0, n_sub)))
+        bus_names = [
+            f"bus-{bus_id}-{sub_id}"
+            for bus_id, sub_id in zip(grid.bus.index, bus_to_sub_ids)
+        ]
+        grid.bus["name"] = bus_names
+        self._update_backend(env, grid)
 
         return grid

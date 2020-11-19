@@ -12,8 +12,8 @@ from grid2op.Action import (
 )
 from grid2op.dtypes import dt_int
 
-from lib.data_utils import indices_to_hot
-from lib.visualizer import pprint
+from MIP_oracle.lib.data_utils import indices_to_hot
+from MIP_oracle.lib.visualizer import pprint
 
 
 class ActionSpaceGenerator(object):

@@ -51,7 +51,8 @@ class CaseParameters(Parameters):
                 "NB_TIMESTEP_COOLDOWN_LINE": 0,
                 "NB_TIMESTEP_COOLDOWN_SUB": 0,
             }
-        elif "l2rpn_wcci_2020" in case_name:
+        else:
+            # 1) changed this for all other cases
             param_dict = {
                 "NO_OVERFLOW_DISCONNECTION": False,
                 "IGNORE_MIN_UP_DOWN_TIME": True,
@@ -66,9 +67,6 @@ class CaseParameters(Parameters):
                 "NB_TIMESTEP_COOLDOWN_LINE": 3,
                 "NB_TIMESTEP_COOLDOWN_SUB": 3,
             }
-        else:
-            raise ValueError(f"Invalid case name. Case {case_name} does not exist.")
-
         return param_dict
 
 

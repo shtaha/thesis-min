@@ -11,9 +11,8 @@ def get_sorted_chronics(env):
         filter(lambda x: os.path.isdir(os.path.join(chronics_dir, x)), chronics)
     )
 
-    if "rte_case5" in env.name or "l2rpn_2019" in env.name:
-        chronics_sorted = sorted(chronics, key=lambda x: int(x))
-    else:
+
+    if "l2rpn_wcci_2020" in env.name:
         chronics_sorted = sorted(
             chronics,
             key=lambda x: (
@@ -21,5 +20,7 @@ def get_sorted_chronics(env):
                 int(x.split("_")[-1]),
             ),
         )
+    else:
+        chronics_sorted = sorted(chronics, key=lambda x: int(x))
 
     return chronics_dir, chronics, chronics_sorted
