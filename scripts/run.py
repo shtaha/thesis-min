@@ -2,10 +2,10 @@ import os
 
 import numpy as np
 
-from lib.agents import make_agent
-from lib.chronics import get_sorted_chronics
-from lib.dc_opf import load_case, CaseParameters
-from lib.visualizer import pprint
+from MIP_oracle.agents import make_agent
+from MIP_oracle.chronics import get_sorted_chronics
+from MIP_oracle.dc_opf import load_case, CaseParameters
+from MIP_oracle.visualizer import pprint
 
 # Environment parameters
 env_dc = True
@@ -30,8 +30,8 @@ for case_name in [
 
     for agent_name in [
         #"do-nothing-agent",
-        #"agent-mip",
-        "agent-multistep-mip",
+        "agent-mip",
+        #"agent-multistep-mip",
     ]:
         np.random.seed(0)
 

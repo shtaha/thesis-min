@@ -1,9 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='lib',
-    version='0.1.0',
-    packages=find_packages(include=['lib', 'lib.*']),
+    name='MIP_oracle',
+    packages=find_packages(include=['MIP_oracle', 'MIP_oracle.*']),
     install_requires=[
         'Pyomo',
     ]
