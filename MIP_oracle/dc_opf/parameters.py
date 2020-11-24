@@ -83,8 +83,8 @@ class SolverParameters(AbstractParameters):
         warm_start=False,
         time_limit=5,
     ):
-        if sys.platform != "win32":
-            solver_name = "glpk"
+        #if sys.platform != "win32":
+        #    solver_name = "glpk"
 
         self.solver_name = solver_name
         self.tol = tol
